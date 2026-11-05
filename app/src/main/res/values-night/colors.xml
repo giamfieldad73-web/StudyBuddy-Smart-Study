@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 Indigo / Cyan / Dark Slate Palette for Night Mode -->
+    <color name="md_theme_primary">#818CF8</color>
+    <color name="md_theme_onPrimary">#1E1B4B</color>
+    <color name="md_theme_primaryContainer">#312E81</color>
+    <color name="md_theme_onPrimaryContainer">#E0E7FF</color>
+    
+    <color name="md_theme_secondary">#22D3EE</color>
+    <color name="md_theme_onSecondary">#083344</color>
+    <color name="md_theme_secondaryContainer">#164E63</color>
+    <color name="md_theme_onSecondaryContainer">#CFFAFE</color>
+
+    <color name="md_theme_tertiary">#A78BFA</color>
+    
+    <color name="md_theme_background">#0F172A</color>
+    <color name="md_theme_onBackground">#F8FAFC</color>
+    <color name="md_theme_surface">#1E293B</color>
+    <color name="md_theme_onSurface">#F8FAFC</color>
+    <color name="md_theme_surfaceVariant">#334155</color>
+    <color name="md_theme_onSurfaceVariant">#94A3B8</color>
+    <color name="md_theme_outline">#475569</color>
+
+    <!-- Accent Badges in Dark Mode -->
+    <color name="accent_green">#34D399</color>
+    <color name="accent_green_light">#064E3B</color>
+    <color name="accent_amber">#FBBF24</color>
+    <color name="accent_amber_light">#78350F</color>
+    <color name="accent_rose">#FB7185</color>
+    <color name="accent_rose_light">#881337</color>
+</resources>

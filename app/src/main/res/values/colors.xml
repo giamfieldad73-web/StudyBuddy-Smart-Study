@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 Indigo / Cyan / Slate Palette -->
+    <color name="md_theme_primary">#4F46E5</color>
+    <color name="md_theme_onPrimary">#FFFFFF</color>
+    <color name="md_theme_primaryContainer">#EEF2FF</color>
+    <color name="md_theme_onPrimaryContainer">#312E81</color>
+    
+    <color name="md_theme_secondary">#06B6D4</color>
+    <color name="md_theme_onSecondary">#FFFFFF</color>
+    <color name="md_theme_secondaryContainer">#E0F2FE</color>
+    <color name="md_theme_onSecondaryContainer">#0369A1</color>
+
+    <color name="md_theme_tertiary">#8B5CF6</color>
+    
+    <color name="md_theme_background">#F8FAFC</color>
+    <color name="md_theme_onBackground">#0F172A</color>
+    <color name="md_theme_surface">#FFFFFF</color>
+    <color name="md_theme_onSurface">#0F172A</color>
+    <color name="md_theme_surfaceVariant">#F1F5F9</color>
+    <color name="md_theme_onSurfaceVariant">#64748B</color>
+    <color name="md_theme_outline">#CBD5E1</color>
+
+    <!-- Accent Badges -->
+    <color name="accent_green">#10B981</color>
+    <color name="accent_green_light">#D1FAE5</color>
+    <color name="accent_amber">#F59E0B</color>
+    <color name="accent_amber_light">#FEF3C7</color>
+    <color name="accent_rose">#F43F5E</color>
+    <color name="accent_rose_light">#FFE4E6</color>
+</resources>

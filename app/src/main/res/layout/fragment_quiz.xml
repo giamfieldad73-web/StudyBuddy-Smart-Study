@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/md_theme_background"
+    android:padding="20dp">
+
+    <!-- Active Quiz View Container -->
+    <LinearLayout
+        android:id="@+id/layout_active_quiz"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Progress and score header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_quiz_progress_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Question 1 of 2"
+                android:textColor="@color/md_theme_primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/tv_quiz_score_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Score: 0"
+                android:textColor="@color/accent_green"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/quiz_progress_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:progress="50"
+            app:indicatorColor="@color/md_theme_primary"
+            app:trackColor="@color/md_theme_surfaceVariant" />
+
+        <!-- Question Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/md_theme_outline"
+            app:cardBackgroundColor="@color/md_theme_surface">
+
+            <TextView
+                android:id="@+id/tv_quiz_question_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:text="Which step of cellular respiration can occur in the absence of oxygen?"
+                android:textColor="@color/md_theme_onSurface"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:lineSpacingExtra="4dp" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Options Container -->
+        <RadioGroup
+            android:id="@+id/rg_quiz_options"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <RadioButton
+                android:id="@+id/rb_option_0"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/badge_bg"
+                android:padding="12dp"
+                android:text="Option A"
+                android:textColor="@color/md_theme_onSurface" />
+
+            <RadioButton
+                android:id="@+id/rb_option_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/badge_bg"
+                android:padding="12dp"
+                android:text="Option B"
+                android:textColor="@color/md_theme_onSurface" />
+
+            <RadioButton
+                android:id="@+id/rb_option_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/badge_bg"
+                android:padding="12dp"
+                android:text="Option C"
+                android:textColor="@color/md_theme_onSurface" />
+
+            <RadioButton
+                android:id="@+id/rb_option_3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/badge_bg"
+                android:padding="12dp"
+                android:text="Option D"
+                android:textColor="@color/md_theme_onSurface" />
+        </RadioGroup>
+
+        <!-- Explanation card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_quiz_explanation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/md_theme_primaryContainer">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💡 Explanation"
+                    android:textColor="@color/md_theme_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_quiz_explanation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Glycolysis is anaerobic and takes place in cytoplasm."
+                    android:textColor="@color/md_theme_onSurface"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Submit / Next Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_quiz_action"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="Confirm Answer"
+            android:textColor="#FFFFFF"
+            app:backgroundTint="@color/md_theme_primary"
+            app:cornerRadius="16dp" />
+    </LinearLayout>
+
+    <!-- Quiz Completed Summary View -->
+    <LinearLayout
+        android:id="@+id/layout_quiz_completed"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/badge_bg"
+            android:gravity="center"
+            android:text="🏆"
+            android:textSize="32sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Exam Simulation Complete!"
+            android:textColor="@color/md_theme_onSurface"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_quiz_final_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="You scored 2 out of 2 (100%)"
+            android:textColor="@color/md_theme_onSurfaceVariant"
+            android:textSize="14sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_quiz_retake"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginTop="28dp"
+            android:text="Retake Test"
+            app:cornerRadius="16dp" />
+    </LinearLayout>
+
+</LinearLayout>

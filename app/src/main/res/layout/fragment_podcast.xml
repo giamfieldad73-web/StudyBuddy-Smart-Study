@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/md_theme_background"
+    android:gravity="center_horizontal"
+    android:padding="24dp">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="20dp" />
+
+    <!-- Audio Pod Visualizer Avatar -->
+    <TextView
+        android:id="@+id/tv_audio_visualizer"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:background="@drawable/badge_bg"
+        android:gravity="center"
+        android:text="🎧"
+        android:textSize="54sp" />
+
+    <TextView
+        android:id="@+id/tv_audio_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Cellular Power Breakdown"
+        android:textColor="@color/md_theme_onSurface"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/tv_audio_speaker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Tutor Maya • 2 min listen"
+        android:textColor="@color/md_theme_onSurfaceVariant"
+        android:textSize="13sp" />
+
+    <!-- Play/Pause Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_audio_play_toggle"
+        android:layout_width="200dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="28dp"
+        android:text="Play Audio Pod"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/md_theme_primary"
+        app:cornerRadius="28dp"
+        app:icon="@android:drawable/ic_media_play"
+        app:iconTint="#FFFFFF" />
+
+    <!-- Voice Transcript Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="28dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="2dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/md_theme_outline"
+        app:cardBackgroundColor="@color/md_theme_surface">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎙️ AUDIO SCRIPT TRANSCRIPT"
+                    android:textColor="@color/md_theme_primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
+
+                <TextView
+                    android:id="@+id/tv_audio_script"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Audio script text..."
+                    android:textColor="@color/md_theme_onSurface"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="5dp" />
+            </LinearLayout>
+        </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">StudyBuddy</string>
+    <string name="tagline">Smart Active Recall &amp; Study Kits</string>
+    <string name="nav_kits">Study Kits</string>
+    <string name="nav_flashcards">Flashcards</string>
+    <string name="nav_quiz">Exam Mode</string>
+    <string name="nav_podcast">Audio Pods</string>
+    <string name="nav_stats">Progress</string>
+    <string name="btn_create_kit">Create Study Kit</string>
+    <string name="search_hint">Search kits, subjects, notes...</string>
+</resources>

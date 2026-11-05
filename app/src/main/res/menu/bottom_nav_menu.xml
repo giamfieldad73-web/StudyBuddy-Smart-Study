@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_kits"
+        android:icon="@drawable/ic_nav_kits"
+        android:title="Reviewer" />
+    <item
+        android:id="@+id/nav_cards"
+        android:icon="@drawable/ic_nav_cards"
+        android:title="Cards" />
+    <item
+        android:id="@+id/nav_smart_study"
+        android:icon="@drawable/ic_nav_smart_study"
+        android:title="Smart Test" />
+    <item
+        android:id="@+id/nav_podcast"
+        android:icon="@drawable/ic_nav_podcast"
+        android:title="Audio" />
+    <item
+        android:id="@+id/nav_stats"
+        android:icon="@drawable/ic_nav_stats"
+        android:title="Stats" />
+</menu>
