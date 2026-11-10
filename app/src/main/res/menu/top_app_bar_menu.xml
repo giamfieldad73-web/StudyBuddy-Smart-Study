@@ -2,9 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_upload_file"
+        android:icon="@android:drawable/ic_menu_add"
+        android:title="Upload File / Reviewer"
+        app:iconTint="@color/md_theme_onSurface"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_theme_toggle"
         android:icon="@drawable/ic_dark_mode"
         android:title="Theme"
         app:iconTint="@color/md_theme_onSurface"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 </menu>

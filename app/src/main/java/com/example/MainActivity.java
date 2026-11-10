@@ -2,6 +2,7 @@ package com.example;
 
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
@@ -31,6 +32,14 @@ import com.example.model.Flashcard;
 import com.example.model.QuizQuestion;
 import com.example.model.SmartChallenge;
 import com.example.model.StudyKit;
+import com.example.util.AiReviewerGenerator;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -87,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         repository = StudyRepository.getInstance();
+        repository.init(this);
         fragmentContainer = findViewById(R.id.fragment_container);
         bottomNav = findViewById(R.id.bottom_navigation);
 
@@ -105,6 +115,9 @@ public class MainActivity extends AppCompatActivity {
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_theme_toggle) {
                 showThemeSelectionDialog();
+                return true;
+            } else if (item.getItemId() == R.id.action_upload_file) {
+                showCreateKitDialog();
                 return true;
             }
             return false;
@@ -168,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 StringBuilder stringBuilder = new StringBuilder();
                 String line;
                 int linesRead = 0;
-                while ((line = reader.readLine()) != null && linesRead < 300) {
+                while ((line = reader.readLine()) != null && linesRead < 5000) {
                     stringBuilder.append(line).append("\n");
                     linesRead++;
                 }
@@ -178,26 +191,35 @@ public class MainActivity extends AppCompatActivity {
                 String fileContent = stringBuilder.toString().trim();
                 String fileName = uri.getLastPathSegment();
                 if (fileName == null || fileName.isEmpty()) fileName = "Uploaded Document";
+                if (fileName.contains("/")) {
+                    fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+                }
 
                 currentUploadedFileName = fileName;
                 currentUploadedFullContent = fileContent;
 
-                if (currentDialogNotesEt != null) {
+                boolean dialogActive = (currentDialogNotesEt != null);
+
+                if (dialogActive) {
                     currentDialogNotesEt.setText(fileContent);
-                }
-                if (currentDialogFileNameTv != null) {
-                    currentDialogFileNameTv.setText("Attached: " + fileName);
-                    currentDialogFileNameTv.setTextColor(Color.parseColor("#10B981"));
-                }
-                if (currentDialogFileSubTv != null) {
-                    currentDialogFileSubTv.setText("Loaded " + linesRead + " lines from document");
-                }
-                if (currentDialogTitleEt != null && currentDialogTitleEt.getText().toString().trim().isEmpty()) {
-                    String cleanName = fileName.replace(".txt", "").replace(".pdf", "").replace("_", " ");
-                    currentDialogTitleEt.setText(cleanName);
+                    if (currentDialogFileNameTv != null) {
+                        currentDialogFileNameTv.setText("Attached: " + fileName);
+                        currentDialogFileNameTv.setTextColor(Color.parseColor("#10B981"));
+                    }
+                    if (currentDialogFileSubTv != null) {
+                        currentDialogFileSubTv.setText("Loaded " + linesRead + " lines from document");
+                    }
+                    if (currentDialogTitleEt != null && currentDialogTitleEt.getText().toString().trim().isEmpty()) {
+                        String cleanName = fileName.replaceAll("(?i)\\.(txt|pdf|docx|md|csv)", "").replace("_", " ").replace("-", " ");
+                        currentDialogTitleEt.setText(cleanName);
+                    }
                 }
 
-                Toast.makeText(this, "Document loaded successfully! Generating reviewer...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Document loaded (" + linesRead + " lines)! AI Reviewer Engine Ready.", Toast.LENGTH_SHORT).show();
+
+                if (!dialogActive) {
+                    showCreateKitDialog();
+                }
             }
         } catch (Exception e) {
             Toast.makeText(this, "Could not read file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -281,18 +303,34 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView rvKits = view.findViewById(R.id.rv_study_kits);
         rvKits.setLayoutManager(new LinearLayoutManager(this));
 
-        StudyKitsAdapter adapter = new StudyKitsAdapter(kitList, selectedKit != null ? selectedKit.getId() : "", kit -> {
-            repository.setSelectedKitId(kit.getId());
-            currentCardIndex = 0;
-            isCardFlipped = false;
-            currentQuizIndex = 0;
-            quizScore = 0;
-            isQuizAnswerSubmitted = false;
-            currentSmartIndex = 0;
-            smartChallengeScore = 0;
-            isSmartAnswerSubmitted = false;
-            showStudyKitsView();
-        });
+        StudyKitsAdapter adapter = new StudyKitsAdapter(
+            kitList,
+            selectedKit != null ? selectedKit.getId() : "",
+            kit -> {
+                repository.setSelectedKitId(kit.getId());
+                currentCardIndex = 0;
+                isCardFlipped = false;
+                currentQuizIndex = 0;
+                quizScore = 0;
+                isQuizAnswerSubmitted = false;
+                currentSmartIndex = 0;
+                smartChallengeScore = 0;
+                isSmartAnswerSubmitted = false;
+                showStudyKitsView();
+            },
+            kit -> {
+                new MaterialAlertDialogBuilder(this)
+                    .setTitle("Delete Study Kit?")
+                    .setMessage("Are you sure you want to delete \"" + kit.getTitle() + "\"? This will remove it permanently from your SQLite database.")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        repository.deleteKit(kit.getId());
+                        Toast.makeText(this, "Deleted \"" + kit.getTitle() + "\" from SQL Database.", Toast.LENGTH_SHORT).show();
+                        showStudyKitsView();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            }
+        );
         rvKits.setAdapter(adapter);
 
         etSearch.addTextChangedListener(new TextWatcher() {
@@ -316,6 +354,18 @@ public class MainActivity extends AppCompatActivity {
         });
 
         MaterialButton btnReadFullReviewer = view.findViewById(R.id.btn_read_full_reviewer);
+        View cardQuickUpload = view.findViewById(R.id.card_quick_upload);
+        MaterialButton btnUploadModule = view.findViewById(R.id.btn_upload_module_reviewer);
+
+        View.OnClickListener uploadListener = v -> {
+            try {
+                filePickerLauncher.launch("*/*");
+            } catch (Exception e) {
+                showCreateKitDialog();
+            }
+        };
+        if (cardQuickUpload != null) cardQuickUpload.setOnClickListener(uploadListener);
+        if (btnUploadModule != null) btnUploadModule.setOnClickListener(uploadListener);
 
         btnQuickFlashcards.setOnClickListener(v -> bottomNav.setSelectedItemId(R.id.nav_cards));
         if (btnQuickSmartTest != null) {
@@ -366,148 +416,36 @@ public class MainActivity extends AppCompatActivity {
 
         new MaterialAlertDialogBuilder(this)
             .setView(dialogView)
-            .setPositiveButton("Generate Reviewer", (dialog, which) -> {
+            .setPositiveButton("Generate AI Reviewer", (dialog, which) -> {
                 String title = etTitle.getText().toString().trim();
                 String subject = etSubject.getText().toString().trim();
                 String notes = etNotes.getText().toString().trim();
 
-                if (title.isEmpty()) {
-                    Toast.makeText(this, "Please enter a topic title or attach a document", Toast.LENGTH_SHORT).show();
+                if (title.isEmpty() && notes.isEmpty() && currentUploadedFullContent.isEmpty()) {
+                    Toast.makeText(this, "Please enter a topic title, paste notes, or upload a document file", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                if (subject.isEmpty()) subject = "General";
+                String contentToUse = !notes.isEmpty() ? notes : currentUploadedFullContent;
 
-                // Generate Smart Reviewer in Java
-                String kitId = "kit_" + UUID.randomUUID().toString().substring(0, 5);
-                String colorHex = "#8B5CF6";
-                String subLower = subject.toLowerCase();
-                if (subLower.contains("bio") || subLower.contains("med")) colorHex = "#10B981";
-                else if (subLower.contains("code") || subLower.contains("tech") || subLower.contains("cs")) colorHex = "#4F46E5";
-                else if (subLower.contains("econ") || subLower.contains("finance")) colorHex = "#F59E0B";
-
-                String summary = notes.isEmpty()
-                    ? "Essential foundational concepts, key active review questions, and exam preparation for " + title + "."
-                    : (notes.length() > 300 ? notes.substring(0, 300) + "..." : notes);
-
-                // Auto-generate active flashcards based on document notes
-                List<Flashcard> generatedCards = new ArrayList<>();
-                generatedCards.add(new Flashcard(
-                    "fc_" + UUID.randomUUID().toString().substring(0, 4),
-                    "What is the primary thesis of " + title + "?",
-                    "Core principles, rules, and functional mechanics governing " + subject + ".",
-                    "Focus on the foundational cause and effect.", 0, 0
-                ));
-                generatedCards.add(new Flashcard(
-                    "fc_" + UUID.randomUUID().toString().substring(0, 4),
-                    "How does " + title + " solve fundamental problems in " + subject + "?",
-                    "By establishing systematic definitions, verified principles, and structured implementation frameworks.",
-                    "Think about real-world application.", 0, 0
-                ));
-                generatedCards.add(new Flashcard(
-                    "fc_" + UUID.randomUUID().toString().substring(0, 4),
-                    "What is the most common error or pitfall when analyzing " + title + "?",
-                    "Over-generalizing initial assumptions without verifying underlying constraints.",
-                    "Verify baseline parameters.", 0, 0
-                ));
-
-                // Auto-generate standard quiz
-                List<QuizQuestion> generatedQuiz = Arrays.asList(
-                    new QuizQuestion(
-                        "q_" + UUID.randomUUID().toString().substring(0, 4),
-                        "Which learning strategy yields highest long-term retention for " + title + "?",
-                        Arrays.asList("Passive rereading", "Active spaced testing", "Highlighting notes", "Cramming overnight"), 1,
-                        "Empirical cognitive studies demonstrate active recall maximizes retention."
-                    )
-                );
-
-                // Auto-generate Smart Challenges to test knowledge
-                List<SmartChallenge> generatedChallenges = new ArrayList<>();
-                generatedChallenges.add(new SmartChallenge(
-                    "sc_" + UUID.randomUUID().toString().substring(0, 4),
-                    "Synthesizing " + title + ": When encountering unexpected edge cases in " + subject + ", what is the highest-priority diagnostic step?",
-                    "Conceptual Application",
-                    Arrays.asList(
-                        "Isolate the baseline assumptions and verify causal invariants systematically.",
-                        "Immediately discard previous models without analysis.",
-                        "Assume random variance and ignore anomalies.",
-                        "Re-run standard protocols blindly."
-                    ),
-                    0,
-                    "isolate assumptions, verify invariants, systematic diagnosis",
-                    "Systematic isolation of causal invariants prevents compounding errors and validates core conceptual foundations."
-                ));
-                generatedChallenges.add(new SmartChallenge(
-                    "sc_" + UUID.randomUUID().toString().substring(0, 4),
-                    "How does knowledge of " + title + " directly challenge conventional assumptions in " + subject + "?",
-                    "Advanced Synthesis",
-                    Arrays.asList(
-                        "It provides measurable empirical frameworks rather than subjective heuristic approximations.",
-                        "It completely invalidates all previous discoveries in the field.",
-                        "It eliminates the need for mathematical rigor.",
-                        "It requires purely theoretical memorization."
-                    ),
-                    0,
-                    "empirical framework, measurable rigor, heuristic vs analytical",
-                    "Rigorous empirical frameworks allow students and practitioners to make predictive, falsifiable assertions."
-                ));
-
-                String fullReviewerDoc;
-                if (!notes.isEmpty()) {
-                    fullReviewerDoc = "STUDY REVIEWER: " + title.toUpperCase() + "\n"
-                        + "Discipline: " + subject + "\n"
-                        + "Source: " + (currentUploadedFileName.isEmpty() ? "User Notes / Lecture Highlights" : currentUploadedFileName) + "\n\n"
-                        + "=== CORE SUMMARY ===\n" + summary + "\n\n"
-                        + "=== COMPLETE DOCUMENT CONTENT & LECTURE TEXT ===\n" + notes + "\n\n"
-                        + "=== ACTIVE RECALL KEY CONCEPTS ===\n"
-                        + "1. Foundational Definition: " + title + " structures fundamental causal relationships in " + subject + ".\n"
-                        + "2. Core Application: Focus on invariant constraints, empirical testing, and step-by-step problem solving.\n"
-                        + "3. Retention Strategy: Test using active flashcards and smart adaptive probes.\n\n"
-                        + "=== REVIEW STUDY GUIDE ===\n"
-                        + "• Review Questions: " + generatedCards.size() + " active recall cards generated.\n"
-                        + "• Smart Probes: " + generatedChallenges.size() + " conceptual application questions.\n"
-                        + "• Voice Audio Pod: Synthesized text-to-speech audio lesson available in Audio tab.";
-                } else {
-                    fullReviewerDoc = "STUDY REVIEWER: " + title.toUpperCase() + "\n"
-                        + "Discipline: " + subject + "\n"
-                        + "Synthesized By: StudyBuddy AI Reviewer Generator\n\n"
-                        + "=== OVERVIEW & FOUNDATIONAL PRINCIPLES ===\n"
-                        + title + " represents a key subject pillar in the study of " + subject + ". "
-                        + "Understanding " + title + " requires mastering the theoretical axioms, operational mechanisms, "
-                        + "and structured methodologies governing this discipline.\n\n"
-                        + "=== KEY CONCEPTUAL PILLARS ===\n"
-                        + "1. Primary Mechanism: Systematically identifies parameters and verifies operational invariants.\n"
-                        + "2. Theoretical Integration: Connects foundational theory with practical applied problem-solving.\n"
-                        + "3. Common Misconceptions: Confusing passive familiarity with genuine active retrieval mastery.\n\n"
-                        + "=== ACTIVE STUDY RECOMMENDATIONS ===\n"
-                        + "• Practice self-testing: Switch to the Cards tab to test active recall without looking at the answer first.\n"
-                        + "• Challenge your knowledge: Tackle the Smart Test tab to verify deep conceptual application.\n"
-                        + "• Audio immersion: Listen to the 2-minute audio breakdown in the Audio tab while on the move.";
-                }
-
-                String sourceName = currentUploadedFileName.isEmpty() ? "Synthesized Topic Reviewer" : currentUploadedFileName;
-
-                AudioSummary generatedAudio = new AudioSummary(
-                    "aud_" + UUID.randomUUID().toString().substring(0, 4),
-                    "Quick Reviewer Recap: " + title, "AI Study Tutor", "2 min",
-                    "Welcome to your StudyBuddy reviewer on " + title + "! Master this topic through active retrieval, test yourself on the smart challenges, and reinforce key concepts!"
-                );
-
-                StudyKit newKit = new StudyKit(
-                    kitId, title, subject, colorHex, summary,
-                    fullReviewerDoc, sourceName,
-                    Arrays.asList("Foundational definitions & principles", "Critical system interactions", "Advanced problem-solving mechanisms"),
-                    generatedCards, generatedQuiz, generatedChallenges, generatedAudio, 0
+                StudyKit newKit = AiReviewerGenerator.generateFromContent(
+                    title,
+                    subject,
+                    currentUploadedFileName,
+                    contentToUse
                 );
 
                 currentUploadedFileName = "";
                 currentUploadedFullContent = "";
 
                 repository.addKit(newKit);
-                Toast.makeText(this, "Generated Reviewer & Smart Challenges for " + title + "!", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "🤖 AI Synthesized Reviewer for " + newKit.getTitle() + "!", Toast.LENGTH_LONG).show();
                 showStudyKitsView();
             })
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton("Cancel", (dialog, which) -> {
+                currentUploadedFileName = "";
+                currentUploadedFullContent = "";
+            })
             .show();
     }
 
@@ -683,45 +621,70 @@ public class MainActivity extends AppCompatActivity {
             SmartChallenge sc = kit.getSmartChallenges().get(currentSmartIndex);
             if (!isSmartAnswerSubmitted) {
                 boolean isCorrect = false;
+                int chosen = -1;
                 if (!isSmartSocraticMode) {
                     int checkedId = rgOptions.getCheckedRadioButtonId();
                     if (checkedId == -1) {
                         Toast.makeText(this, "Select an option to test your knowledge", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    int chosen = -1;
                     for (int i = 0; i < rbOptions.length; i++) {
                         if (rbOptions[i].getId() == checkedId) chosen = i;
                     }
                     isCorrect = (chosen == sc.getCorrectIndex());
                 } else {
-                    String userText = etSocraticAnswer.getText().toString().trim().toLowerCase();
+                    String userText = etSocraticAnswer.getText().toString().trim().toLowerCase(Locale.ROOT);
                     if (userText.isEmpty()) {
                         Toast.makeText(this, "Please write an explanation to challenge your knowledge", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    // Validate against smart challenge keywords
-                    String[] keywords = sc.getIdealAnswerKeywords().toLowerCase().split(",");
+                    String[] keywords = sc.getIdealAnswerKeywords().toLowerCase(Locale.ROOT).split(",");
                     int matched = 0;
                     for (String kw : keywords) {
-                        if (userText.contains(kw.trim())) matched++;
+                        if (!kw.trim().isEmpty() && userText.contains(kw.trim())) matched++;
                     }
                     isCorrect = matched >= 1 || userText.length() > 30;
                 }
 
                 isSmartAnswerSubmitted = true;
+
+                String correctOptionText = (sc.getCorrectIndex() >= 0 && sc.getCorrectIndex() < sc.getOptions().size())
+                    ? sc.getOptions().get(sc.getCorrectIndex()) : "";
+
                 if (isCorrect) {
                     smartChallengeScore++;
                     tvScore.setText("Score: " + smartChallengeScore);
                     tvFeedbackHeader.setText("🌟 Knowledge Verified!");
                     tvFeedbackHeader.setTextColor(Color.parseColor("#10B981"));
+                    tvFeedbackBody.setText("✓ Excellent job! Your response matches the document principles.\n\n💡 Explanation:\n" + sc.getDetailedAnalysis());
                 } else {
-                    tvFeedbackHeader.setText("⚠️ Needs Reinforcement");
+                    tvFeedbackHeader.setText("❌ Needs Reinforcement");
                     tvFeedbackHeader.setTextColor(Color.parseColor("#F43F5E"));
+
+                    if (!isSmartSocraticMode) {
+                        tvFeedbackBody.setText("❌ Incorrect answer.\n\n"
+                            + "✓ CORRECT RIGHT ANSWER:\n\"" + correctOptionText + "\"\n\n"
+                            + "💡 Detailed Analysis:\n" + sc.getDetailedAnalysis());
+                    } else {
+                        tvFeedbackBody.setText("❌ Key concept missing from your answer.\n\n"
+                            + "✓ EXPECTED KEY TERMS & CONCEPTS:\n" + sc.getIdealAnswerKeywords() + "\n\n"
+                            + "💡 Detailed Analysis:\n" + sc.getDetailedAnalysis());
+                    }
+                }
+
+                if (!isSmartSocraticMode) {
+                    for (int i = 0; i < rbOptions.length; i++) {
+                        rbOptions[i].setEnabled(false);
+                        if (i == sc.getCorrectIndex()) {
+                            rbOptions[i].setTextColor(Color.parseColor("#10B981"));
+                            rbOptions[i].setTypeface(null, Typeface.BOLD);
+                        } else if (i == chosen && !isCorrect) {
+                            rbOptions[i].setTextColor(Color.parseColor("#F43F5E"));
+                        }
+                    }
                 }
 
                 cardFeedback.setVisibility(View.VISIBLE);
-                tvFeedbackBody.setText(sc.getDetailedAnalysis());
                 btnAction.setText(currentSmartIndex + 1 < kit.getSmartChallenges().size() ? "Next Challenge" : "View Final Knowledge Score");
             } else {
                 if (currentSmartIndex + 1 < kit.getSmartChallenges().size()) {
@@ -732,12 +695,11 @@ public class MainActivity extends AppCompatActivity {
                     btnAction.setText("Submit Knowledge Check");
                     bindSmartChallenge(kit, tvScore, tvCounter, progressBar, tvDiffTag, tvQuestion, rgOptions, rbOptions, cardFeedback, tvFeedbackHeader, tvFeedbackBody, btnAction, etSocraticAnswer);
                 } else {
-                    // Show finish screen
                     layoutActive.setVisibility(View.GONE);
                     layoutCompleted.setVisibility(View.VISIBLE);
                     int total = kit.getSmartChallenges().size();
                     int pct = (smartChallengeScore * 100) / total;
-                    tvFinalResult.setText("You completed the Smart Study challenge!\nScore: " + smartChallengeScore + " / " + total + " (" + pct + "% Retention Strength)\nActive recall feedback integrated into your reviewer!");
+                    tvFinalResult.setText("You completed the Smart Study challenge!\nScore: " + smartChallengeScore + " / " + total + " (" + pct + "% Retention Score)\n\nTap 'Challenge Again' below to continuously familiarize yourself with all possible questions!");
                 }
             }
         });
@@ -746,6 +708,7 @@ public class MainActivity extends AppCompatActivity {
             currentSmartIndex = 0;
             smartChallengeScore = 0;
             isSmartAnswerSubmitted = false;
+            Collections.shuffle(kit.getSmartChallenges());
             layoutCompleted.setVisibility(View.GONE);
             layoutActive.setVisibility(View.VISIBLE);
             cardFeedback.setVisibility(View.GONE);
@@ -772,6 +735,8 @@ public class MainActivity extends AppCompatActivity {
                 rbs[i].setVisibility(View.VISIBLE);
                 rbs[i].setText(sc.getOptions().get(i));
                 rbs[i].setEnabled(!isSmartAnswerSubmitted);
+                rbs[i].setTextColor(Color.parseColor("#0F172A"));
+                rbs[i].setTypeface(null, Typeface.NORMAL);
             } else {
                 rbs[i].setVisibility(View.GONE);
             }
@@ -917,6 +882,7 @@ public class MainActivity extends AppCompatActivity {
         TextView tvBody = view.findViewById(R.id.tv_reader_body_content);
         View btnBack = view.findViewById(R.id.btn_reader_back);
         MaterialButton btnDownload = view.findViewById(R.id.btn_reader_download);
+        MaterialButton btnAiEnhance = view.findViewById(R.id.btn_reader_ai_regenerate);
 
         tvTitle.setText(kit.getTitle());
         tvSub.setText("DISCIPLINE: " + kit.getSubject().toUpperCase());
@@ -924,6 +890,22 @@ public class MainActivity extends AppCompatActivity {
         tvBody.setText(kit.getFullDocumentText().isEmpty() ? kit.getSummary() : kit.getFullDocumentText());
 
         btnBack.setOnClickListener(v -> showStudyKitsView());
+
+        if (btnAiEnhance != null) {
+            btnAiEnhance.setOnClickListener(v -> {
+                Toast.makeText(this, "🤖 AI re-analyzing document & expanding reviewer...", Toast.LENGTH_SHORT).show();
+                StudyKit enhancedKit = AiReviewerGenerator.generateFromContent(
+                    kit.getTitle(),
+                    kit.getSubject(),
+                    kit.getSourceFileName(),
+                    kit.getFullDocumentText()
+                );
+                kit.setFullDocumentText(enhancedKit.getFullDocumentText());
+                kit.setSmartChallenges(enhancedKit.getSmartChallenges());
+                tvBody.setText(kit.getFullDocumentText());
+                Toast.makeText(this, "Reviewer AI Enhanced! Active recall probes updated.", Toast.LENGTH_SHORT).show();
+            });
+        }
 
         btnDownload.setOnClickListener(v -> downloadReviewerDocument(kit));
     }

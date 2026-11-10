@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,14 +22,24 @@ public class StudyKitsAdapter extends RecyclerView.Adapter<StudyKitsAdapter.View
         void onKitClick(StudyKit kit);
     }
 
+    public interface OnKitDeleteListener {
+        void onKitDelete(StudyKit kit);
+    }
+
     private List<StudyKit> kitList;
     private String selectedKitId;
-    private final OnKitClickListener listener;
+    private final OnKitClickListener clickListener;
+    private final OnKitDeleteListener deleteListener;
 
-    public StudyKitsAdapter(List<StudyKit> kitList, String selectedKitId, OnKitClickListener listener) {
+    public StudyKitsAdapter(List<StudyKit> kitList, String selectedKitId, OnKitClickListener clickListener, OnKitDeleteListener deleteListener) {
         this.kitList = kitList;
         this.selectedKitId = selectedKitId;
-        this.listener = listener;
+        this.clickListener = clickListener;
+        this.deleteListener = deleteListener;
+    }
+
+    public StudyKitsAdapter(List<StudyKit> kitList, String selectedKitId, OnKitClickListener clickListener) {
+        this(kitList, selectedKitId, clickListener, null);
     }
 
     public void updateData(List<StudyKit> newList, String selectedKitId) {
@@ -54,7 +65,9 @@ public class StudyKitsAdapter extends RecyclerView.Adapter<StudyKitsAdapter.View
 
         holder.tvBadgeCards.setText(kit.getFlashcards().size() + " Cards");
         holder.tvBadgeQuiz.setText(kit.getQuizQuestions().size() + " Quiz Qs");
-        holder.tvBadgeAudio.setText(kit.getAudioSummary().getDurationText());
+        if (kit.getAudioSummary() != null) {
+            holder.tvBadgeAudio.setText(kit.getAudioSummary().getDurationText());
+        }
 
         try {
             int parsedColor = Color.parseColor(kit.getColorHex());
@@ -67,8 +80,14 @@ public class StudyKitsAdapter extends RecyclerView.Adapter<StudyKitsAdapter.View
         holder.cardView.setStrokeColor(isSelected ? Color.parseColor("#4F46E5") : Color.parseColor("#CBD5E1"));
 
         holder.cardView.setOnClickListener(v -> {
-            if (listener != null) listener.onKitClick(kit);
+            if (clickListener != null) clickListener.onKitClick(kit);
         });
+
+        if (holder.btnDelete != null) {
+            holder.btnDelete.setOnClickListener(v -> {
+                if (deleteListener != null) deleteListener.onKitDelete(kit);
+            });
+        }
     }
 
     @Override
@@ -86,6 +105,7 @@ public class StudyKitsAdapter extends RecyclerView.Adapter<StudyKitsAdapter.View
         TextView tvBadgeCards;
         TextView tvBadgeQuiz;
         TextView tvBadgeAudio;
+        ImageButton btnDelete;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -98,6 +118,7 @@ public class StudyKitsAdapter extends RecyclerView.Adapter<StudyKitsAdapter.View
             tvBadgeCards = itemView.findViewById(R.id.tv_badge_cards);
             tvBadgeQuiz = itemView.findViewById(R.id.tv_badge_quiz);
             tvBadgeAudio = itemView.findViewById(R.id.tv_badge_audio);
+            btnDelete = itemView.findViewById(R.id.btn_delete_kit);
         }
     }
 }
